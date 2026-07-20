@@ -1,0 +1,8 @@
+{% macro team_crest(name, tla=None, crest=None, class_name="size-8") -%}
+  {% if crest %}
+    <img src="{{ crest }}" alt="" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false" class="{{ class_name }} shrink-0 object-contain">
+    <span hidden class="{{ class_name }} shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-semibold text-muted-foreground">{{ tla or name[:3].upper() }}</span>
+  {% else %}
+    <span class="{{ class_name }} flex shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-semibold text-muted-foreground">{{ tla or name[:3].upper() }}</span>
+  {% endif %}
+{%- endmacro %}

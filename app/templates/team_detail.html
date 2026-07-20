@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% from "partials/team_crest.html" import team_crest %}
+{% from "partials/empty.html" import empty_state %}
+
+{% set result_classes = {
+  "W": "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
+  "D": "bg-muted text-muted-foreground",
+  "L": "bg-red-500/15 text-red-600 dark:text-red-400"
+} %}
+
+{% block content %}
+  <div class="flex flex-col gap-6">
+    <div>
+      <a href="/standings?competition={{ competition }}" class="inline-flex items-center gap-2 rounded-md border border-input px-3 py-2 text-sm font-medium hover:bg-accent">
+        <span aria-hidden="true">&larr;</span>
+        Standings
+      </a>
+    </div>
+
+    {% if not summary %}
+      {{ empty_state("Team not found", "No stored standings row exists for this team.") }}
+    {% else %}
+      <header class="relative overflow-hidden rounded-md bg-card p-5 shadow-sm ring-1 ring-foreground/10 sm:p-6">
+        <div class="flex items-center gap-4 sm:gap-5">
+          {{ team_crest(summary.team_name, none, summary.crest, "size-14 sm:size-16 text-sm") }}
+          <div class="flex min-w-0 flex-col gap-1.5">
+            <h1 class="truncate text-2xl font-semibold tracking-tight sm:text-3xl">{{ summary.team_name }}</h1>
+            <p class="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+              <span>{{ summary.competition_name }}</span>
+              <span aria-hidden="true">&middot;</span>
+              <span class="inline-flex rounded-md bg-secondary px-2 py-0.5 font-semibold tabular-nums text-secondary-foreground">#{{ summary.position }}</span>
+              <span aria-hidden="true">&middot;</span>
+              <span class="tabular-nums">{{ summary.played_games }} played</span>
+            </p>
+          </div>
+        </div>
+      </header>
+
+      <section class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <article class="rounded-md border border-border bg-card p-4 shadow-sm">
+          <p class="text-[10px] font-medium tracking-widest text-muted-foreground uppercase">Points</p>
+          <p class="mt-1 text-2xl font-semibold tabular-nums">{{ summary.points }}</p>
+        </article>
+        <article class="rounded-md border border-border bg-card p-4 shadow-sm">
+          <p class="text-[10px] font-medium tracking-widest text-muted-foreground uppercase">Record</p>
+          <p class="mt-1 text-2xl font-semibold tabular-nums">{{ summary.won }}-{{ summary.draw }}-{{ summary.lost }}</p>
+          <p class="text-[10px] text-muted-foreground/70">W-D-L</p>
+        </article>
+        <article class="rounded-md border border-border bg-card p-4 shadow-sm">
+          <p class="text-[10px] font-medium tracking-widest text-muted-foreground uppercase">Goals</p>
+          <p class="mt-1 text-2xl font-semibold tabular-nums">{{ summary.goals_for }}:{{ summary.goals_against }}</p>
+          <p class="text-[10px] text-muted-foreground/70">for : against</p>
+        </article>
+        <article class="rounded-md border border-border bg-card p-4 shadow-sm">
+          <p class="text-[10px] font-medium tracking-widest text-muted-foreground uppercase">Goal difference</p>
+          <p class="mt-1 text-2xl font-semibold tabular-nums {% if summary.goal_difference > 0 %}text-chart-2{% elif summary.goal_difference < 0 %}text-destructive{% endif %}">{{ summary.goal_difference | format_signed }}</p>
+        </article>
+      </section>
+
+      <section class="rounded-md border border-border bg-card shadow-sm">
+        <div class="border-b border-border px-4 py-3">
+          <h2 class="font-semibold">Recent Results</h2>
+        </div>
+        <div class="p-4">
+          {% if recent_results | length == 0 %}
+            <p class="text-sm text-muted-foreground">No finished matches are stored for this team yet.</p>
+          {% else %}
+            <ul class="flex flex-col">
+              {% for row in recent_results %}
+                {% set match = row.match %}
+                <li class="flex items-center gap-3 border-b border-border py-3 first:pt-0 last:border-b-0 last:pb-0">
+                  <div class="flex shrink-0 flex-col items-center gap-1">
+                    <span class="flex size-6 items-center justify-center rounded-full text-xs font-semibold {{ result_classes[row.result or 'D'] }}">{{ row.result or "-" }}</span>
+                    <span class="text-[10px] text-muted-foreground">{{ match.utc_date | kickoff_date }}</span>
+                  </div>
+                  <div class="flex min-w-0 flex-1 flex-col gap-1">
+                    <div class="flex items-baseline justify-between gap-3 text-sm {% if row.away_win %}text-muted-foreground{% endif %}">
+                      <span class="truncate">
+                        {% if match.home_team_id == team_id %}
+                          <span class="font-semibold">{{ match.home_team }}</span>
+                        {% else %}
+                          <a href="/teams/{{ row.opponent_id }}" class="underline-offset-4 hover:underline">{{ match.home_team }}</a>
+                        {% endif %}
+                      </span>
+                      <span class="font-semibold tabular-nums {% if row.away_win %}font-normal{% endif %}">{{ match.home_score }}</span>
+                    </div>
+                    <div class="flex items-baseline justify-between gap-3 text-sm {% if row.home_win %}text-muted-foreground{% endif %}">
+                      <span class="truncate">
+                        {% if match.away_team_id == team_id %}
+                          <span class="font-semibold">{{ match.away_team }}</span>
+                        {% else %}
+                          <a href="/teams/{{ row.opponent_id }}" class="underline-offset-4 hover:underline">{{ match.away_team }}</a>
+                        {% endif %}
+                      </span>
+                      <span class="font-semibold tabular-nums {% if row.home_win %}font-normal{% endif %}">{{ match.away_score }}</span>
+                    </div>
+                  </div>
+                </li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        </div>
+      </section>
+    {% endif %}
+  </div>
+{% endblock %}

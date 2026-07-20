@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% from "partials/league_select.html" import league_select with context %}
+
+{% block content %}
+  <section class="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+    <div>
+      <h1 class="text-2xl font-semibold tracking-tight">Stats</h1>
+      <p class="mt-1 text-sm text-muted-foreground">{{ stats.resolvedSeason | season_label }}</p>
+    </div>
+    <div class="flex flex-wrap items-center gap-3">
+      {{ league_select(competition, "/stats") }}
+      {% if stats.availableSeasons %}
+        <form method="get" action="/stats" class="flex items-center gap-2">
+          <input type="hidden" name="competition" value="{{ competition }}">
+          <label class="sr-only" for="season">Season</label>
+          <select id="season" name="season" class="min-w-40 rounded-md border border-input bg-background px-3 py-2 text-sm" onchange="this.form.submit()">
+            <option value="current" {% if selected_season_param == "current" %}selected{% endif %}>Current season</option>
+            {% for season in stats.availableSeasons %}
+              <option value="{{ season }}" {% if selected_season_param == season|string %}selected{% endif %}>{{ season | season_label }}</option>
+            {% endfor %}
+          </select>
+        </form>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="rounded-lg border border-border bg-card p-8 text-center">
+    <div class="mx-auto flex size-10 items-center justify-center rounded-md bg-muted text-muted-foreground">~</div>
+    <h2 class="mt-4 text-lg font-semibold">Stats page placeholder</h2>
+    <p class="mt-1 text-sm text-muted-foreground">
+      {{ stats.matches | length }} finished matches are loaded for this league and season.
+      This page is available for future work.
+    </p>
+  </section>
+{% endblock %}

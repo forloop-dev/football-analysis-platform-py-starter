@@ -1,0 +1,15 @@
+{% macro form_chips(form) -%}
+  {% if form %}
+    <div class="flex gap-1">
+      {% for result in form %}
+        {% set classes = "bg-muted text-muted-foreground" %}
+        {% if result == "W" %}
+          {% set classes = "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" %}
+        {% elif result == "L" %}
+          {% set classes = "bg-red-500/15 text-red-600 dark:text-red-400" %}
+        {% endif %}
+        <span class="flex size-5 items-center justify-center rounded text-[11px] font-semibold {{ classes }}">{{ result }}</span>
+      {% endfor %}
+    </div>
+  {% endif %}
+{%- endmacro %}

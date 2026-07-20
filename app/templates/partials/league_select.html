@@ -1,0 +1,13 @@
+{% macro league_select(competition, action="", extra_params={}) -%}
+  <form method="get" action="{{ action }}" class="flex items-center gap-2">
+    {% for name, value in extra_params.items() %}
+      <input type="hidden" name="{{ name }}" value="{{ value }}">
+    {% endfor %}
+    <label class="sr-only" for="competition">League</label>
+    <select id="competition" name="competition" class="min-w-40 rounded-md border border-input bg-background px-3 py-2 text-sm" onchange="this.form.submit()">
+      {% for code, label in competition_labels.items() %}
+        <option value="{{ code }}" {% if code == competition %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </form>
+{%- endmacro %}

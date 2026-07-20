@@ -1,0 +1,94 @@
+{% from "partials/team_crest.html" import team_crest %}
+{% from "partials/empty.html" import empty_state %}
+
+{% if match_page.total_count == 0 %}
+  {{ empty_state("No matches", "There are no fixtures for this competition in the bundled fixture data.") }}
+{% else %}
+  <div class="flex flex-col gap-4">
+    <ul class="flex flex-col gap-2.5">
+      {% for match in match_page.items %}
+        {% set live = match.status in ["IN_PLAY", "PAUSED"] %}
+        {% set finished = match.status == "FINISHED" %}
+        {% set played = match.home_score is not none and match.away_score is not none %}
+        {% set home_win = played and match.home_score > match.away_score %}
+        {% set away_win = played and match.away_score > match.home_score %}
+        {% set label = match.status | status_label %}
+        <li>
+          <article class="relative overflow-hidden rounded-md border border-border bg-card text-card-foreground shadow-sm transition-shadow hover:ring-1 hover:ring-foreground/25 {% if live %}ring-1 ring-destructive/30{% endif %}">
+            {% if live %}
+              <span aria-hidden="true" class="absolute inset-y-0 left-0 w-1 bg-destructive"></span>
+            {% endif %}
+            <div class="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 p-4 sm:gap-5 sm:px-6">
+              <div class="flex min-w-0 flex-row-reverse items-center gap-2.5 text-right sm:gap-3">
+                {{ team_crest(match.home_team, match.home_team_tla, match.home_crest) }}
+                <div class="min-w-0">
+                  <a href="/teams/{{ match.home_team_id }}" class="block truncate text-sm font-medium underline-offset-4 hover:underline {% if finished and away_win %}text-muted-foreground{% endif %}">{{ match.home_team }}</a>
+                  {% if match.home_team_tla %}
+                    <p class="text-[10px] tracking-widest text-muted-foreground/70 uppercase">{{ match.home_team_tla }}</p>
+                  {% endif %}
+                </div>
+              </div>
+
+              <div class="flex w-24 flex-col items-center gap-1 sm:w-28">
+                {% if played %}
+                  <div class="flex items-baseline gap-1.5 text-2xl font-semibold tabular-nums">
+                    <span class="{% if finished and away_win %}text-muted-foreground/60{% endif %}">{{ match.home_score }}</span>
+                    <span class="text-sm font-normal text-muted-foreground/50">-</span>
+                    <span class="{% if finished and home_win %}text-muted-foreground/60{% endif %}">{{ match.away_score }}</span>
+                  </div>
+                {% else %}
+                  <div class="flex flex-col items-center">
+                    <span class="text-lg font-semibold tabular-nums">{{ match.utc_date | kickoff_time }}</span>
+                    <span class="text-[11px] text-muted-foreground">{{ match.utc_date | kickoff_date }}</span>
+                  </div>
+                {% endif %}
+
+                {% if live %}
+                  <span class="inline-flex items-center gap-1.5 rounded-md bg-destructive px-2 py-0.5 text-[10px] font-semibold tracking-widest text-destructive-foreground uppercase">
+                    <span class="relative flex size-1.5">
+                      <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-destructive-foreground opacity-75"></span>
+                      <span class="relative inline-flex size-1.5 rounded-full bg-destructive-foreground"></span>
+                    </span>
+                    {{ label }}
+                  </span>
+                {% elif label %}
+                  <span class="text-[10px] font-medium tracking-widest text-muted-foreground uppercase">{{ label }}</span>
+                {% endif %}
+              </div>
+
+              <div class="flex min-w-0 items-center gap-2.5 text-left sm:gap-3">
+                {{ team_crest(match.away_team, match.away_team_tla, match.away_crest) }}
+                <div class="min-w-0">
+                  <a href="/teams/{{ match.away_team_id }}" class="block truncate text-sm font-medium underline-offset-4 hover:underline {% if finished and home_win %}text-muted-foreground{% endif %}">{{ match.away_team }}</a>
+                  {% if match.away_team_tla %}
+                    <p class="text-[10px] tracking-widest text-muted-foreground/70 uppercase">{{ match.away_team_tla }}</p>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </article>
+        </li>
+      {% endfor %}
+    </ul>
+
+    {% if match_page.page_count > 1 %}
+      {% set previous_page = match_page.current_page - 1 %}
+      {% set next_page = match_page.current_page + 1 %}
+      <nav aria-label="Pagination" class="flex items-center justify-center gap-2">
+        <a href="/?competition={{ competition }}&page={{ previous_page if match_page.has_previous else 1 }}"
+           hx-get="/partials/matches?competition={{ competition }}&page={{ previous_page if match_page.has_previous else 1 }}"
+           hx-target="#match-list"
+           hx-push-url="true"
+           aria-disabled="{{ 'false' if match_page.has_previous else 'true' }}"
+           class="rounded-md border border-input px-3 py-2 text-sm font-medium {% if not match_page.has_previous %}pointer-events-none opacity-50{% endif %}">Previous</a>
+        <span class="flex h-9 items-center px-3 text-sm text-muted-foreground">Page {{ match_page.current_page }} of {{ match_page.page_count }}</span>
+        <a href="/?competition={{ competition }}&page={{ next_page if match_page.has_next else match_page.page_count }}"
+           hx-get="/partials/matches?competition={{ competition }}&page={{ next_page if match_page.has_next else match_page.page_count }}"
+           hx-target="#match-list"
+           hx-push-url="true"
+           aria-disabled="{{ 'false' if match_page.has_next else 'true' }}"
+           class="rounded-md border border-input px-3 py-2 text-sm font-medium {% if not match_page.has_next %}pointer-events-none opacity-50{% endif %}">Next</a>
+      </nav>
+    {% endif %}
+  </div>
+{% endif %}

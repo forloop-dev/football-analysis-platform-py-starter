@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% from "partials/league_select.html" import league_select with context %}
+
+{% block content %}
+  <section class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div>
+      <h1 class="text-2xl font-semibold tracking-tight">Standings</h1>
+      <p class="mt-1 text-sm text-muted-foreground">League table</p>
+    </div>
+    {{ league_select(competition, "/standings", {"q": q} if q else {}) }}
+  </section>
+
+  <section class="mb-4">
+    <form method="get" action="/standings" class="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <input type="hidden" id="standings-competition" name="competition" value="{{ competition }}">
+      <label class="sr-only" for="q">Search teams</label>
+      <div class="flex min-w-64 flex-1 items-center rounded-md border border-input bg-background">
+        <span aria-hidden="true" class="px-3 text-muted-foreground">⌕</span>
+        <input id="q"
+               name="q"
+               value="{{ q }}"
+               placeholder="Search teams"
+               type="search"
+               aria-label="Search teams"
+               hx-get="/partials/standings-table"
+               hx-trigger="input changed delay:300ms, search"
+               hx-target="#standings-table"
+               hx-include="#standings-competition"
+               hx-push-url="true"
+               class="min-w-0 flex-1 bg-transparent px-1 py-2 text-sm outline-none">
+        {% if q %}
+          <a href="/standings?competition={{ competition }}"
+             aria-label="Clear search"
+             class="mr-1 rounded-md px-2 py-1 text-sm text-muted-foreground hover:bg-muted hover:text-foreground">×</a>
+        {% endif %}
+      </div>
+    </form>
+  </section>
+
+  <div id="standings-table">
+    {% include "partials/standings_table.html" %}
+  </div>
+{% endblock %}

@@ -1,0 +1,81 @@
+{% from "partials/team_crest.html" import team_crest %}
+{% from "partials/empty.html" import empty_state %}
+
+{% set zone_classes = {
+  "ucl": "bg-chart-1",
+  "uel": "bg-chart-2",
+  "rel": "bg-destructive"
+} %}
+{% set zone_labels = {
+  "ucl": "Champions League",
+  "uel": "Europa League",
+  "rel": "Relegation"
+} %}
+
+{% if standings_rows | length == 0 %}
+  {% if has_search %}
+    {{ empty_state("No teams found", "Try a different team name.") }}
+  {% else %}
+    {{ empty_state("No standings yet", "No table exists for this competition in the bundled fixture data.") }}
+  {% endif %}
+{% else %}
+  <div class="flex flex-col gap-2">
+    <div class="overflow-x-auto rounded-md bg-card shadow-sm ring-1 ring-foreground/10">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b bg-muted/50 text-[11px] font-medium tracking-widest text-muted-foreground uppercase [&>th]:px-3 [&>th]:py-2.5 [&>th]:text-right [&>th]:font-medium [&>th:nth-child(2)]:text-left">
+            <th class="w-12">#</th>
+            <th>Team</th>
+            <th title="Played">P</th>
+            <th title="Won" class="max-sm:hidden">W</th>
+            <th title="Drawn" class="max-sm:hidden">D</th>
+            <th title="Lost" class="max-sm:hidden">L</th>
+            <th title="Goals for and against" class="max-md:hidden">GF:GA</th>
+            <th title="Goal difference">GD</th>
+            <th title="Points">Pts</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in standings_rows %}
+            {% set zone = zone_for(row.position, standings_rows | length) if show_zones else none %}
+            <tr class="border-t first:border-t-0 transition-colors hover:bg-muted/40 [&>td]:px-3 [&>td]:py-2.5 [&>td]:text-right [&>td]:tabular-nums [&>td:nth-child(2)]:text-left">
+              <td class="relative text-muted-foreground">
+                {% if zone %}
+                  <span aria-hidden="true" class="absolute inset-y-1 left-0 w-0.5 rounded-r-full {{ zone_classes[zone] }}"></span>
+                {% endif %}
+                {{ row.position }}
+              </td>
+              <td>
+                <a href="/teams/{{ row.team_id }}" class="flex min-w-0 items-center gap-2.5 font-medium underline-offset-4 hover:underline">
+                  {{ team_crest(row.team_name, row.team_tla, row.crest, "size-5") }}
+                  <span class="truncate">{{ row.team_name }}</span>
+                </a>
+              </td>
+              <td class="text-muted-foreground">{{ row.played_games }}</td>
+              <td class="text-muted-foreground max-sm:hidden">{{ row.won }}</td>
+              <td class="text-muted-foreground max-sm:hidden">{{ row.draw }}</td>
+              <td class="text-muted-foreground max-sm:hidden">{{ row.lost }}</td>
+              <td class="text-muted-foreground max-md:hidden">{{ row.goals_for }}:{{ row.goals_against }}</td>
+              <td class="{% if row.goal_difference > 0 %}text-chart-2{% elif row.goal_difference < 0 %}text-destructive{% endif %}">
+                {{ row.goal_difference | format_signed }}
+              </td>
+              <td>
+                <span class="inline-flex min-w-9 justify-center rounded-md bg-secondary px-2 py-1 font-semibold tabular-nums text-secondary-foreground">{{ row.points }}</span>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if show_zones %}
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-1 px-1 text-[11px] text-muted-foreground">
+        {% for zone in ["ucl", "uel", "rel"] %}
+          <span class="inline-flex items-center gap-1.5">
+            <span aria-hidden="true" class="size-1.5 rounded-full {{ zone_classes[zone] }}"></span>
+            {{ zone_labels[zone] }}
+          </span>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+{% endif %}
